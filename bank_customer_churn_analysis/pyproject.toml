@@ -6,12 +6,13 @@ authors = ["ergunserter <ergunserter@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.12"
 pandas = "^2.2.2"
 xgboost = "^2.0.3"
 shap = "^0.45.0"
 matplotlib = "^3.8.4"
 scikit-learn = "^1.4.2"
+dowhy = "^0.11.1"
 
 
 [build-system]
