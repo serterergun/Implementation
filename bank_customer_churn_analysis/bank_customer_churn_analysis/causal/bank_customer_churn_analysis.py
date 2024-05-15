@@ -1,46 +1,66 @@
-from dowhy import CausalModel
-import dowhy.datasets
-import networkx as nx, numpy as np, pandas as pd
-from dowhy import gcm
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import dowhy
+import graphviz
 
-# Generate some sample data
-data = dowhy.datasets.linear_dataset(
-    beta=10,
-    num_common_causes=5,
-    num_instruments=2,
-    num_samples=10000)
+# Load the new dataset
+dataset = pd.read_csv('https://raw.githubusercontent.com/serterergun/Implementation/main/bank_customer_churn_analysis/data/bank_customer_churn_analysis.csv?token=GHSAT0AAAAAACRMURIWREBERBCK3KZAWPM6ZSFG3OQ')
+dataset.head()
 
-# Step 1: Create a causal model from the data and given graph.
-model = CausalModel(
-    data=data["df"],
-    treatment=data["treatment_name"],
-    outcome=data["outcome_name"],
-    graph=data["gml_graph"])
+# Drop the specified columns
+dataset = dataset.drop(['RowNumber', 'CustomerId', 'Surname'], axis=1)
 
-# Step 2: Identify causal effect and return target estimands
-identified_estimand = model.identify_effect()
+# Encode 'Gender' and 'Geography' columns
+dataset['Gender'] = dataset['Gender'].map({'Male': 1, 'Female': 0})
+dataset = pd.get_dummies(dataset, columns=['Geography'], drop_first=True)
 
-# Step 3: Estimate the target estimand using a statistical method.
-estimate = model.estimate_effect(identified_estimand, method_name="backdoor.propensity_score_matching")
+dataset.columns
 
-# Step 4: Refute the obtained estimate using multiple robustness checks.
-refute_results = model.refute_estimate(identified_estimand, estimate, method_name="random_common_cause")
+# Check for missing values and handle if necessary
+dataset.isnull().sum()
 
-# Let's generate some "normal" data we assume we're given from our problem domain:
-X = np.random.normal(loc=0, scale=1, size=1000)
-Y = 2 * X + np.random.normal(loc=0, scale=1, size=1000)
-Z = 3 * Y + np.random.normal(loc=0, scale=1, size=1000)
-data = pd.DataFrame(dict(X=X, Y=Y, Z=Z))
+# For this example, we assume no additional handling is needed, but you may need to adjust based on the dataset
 
-# Step 1: Model our system:
-causal_model = gcm.StructuralCausalModel(nx.DiGraph([('X', 'Y'), ('Y', 'Z')]))
-gcm.auto.assign_causal_mechanisms(causal_model, data)
+# Example of printing first few rows after processing
+print(dataset.head())
 
-# Step 2: Train our causal model with the data from above:
-gcm.fit(causal_model, data)
+# Creating a copy of the dataset
+dataset_copy = dataset.copy(deep=True)
 
-# Step 3: Perform a causal analysis. For instance, root cause analysis, where we observe
-anomalous_sample = pd.DataFrame(dict(X=[0.1], Y=[6.2], Z=[19]))  # Here, Y is the root cause.
-# ... and would like to answer the question:
-# "Which node is the root cause of the anomaly in Z?":
-anomaly_attribution = gcm.attribute_anomalies(causal_model, "Z", anomalous_sample)
+# Adjust the causal graph as per the new dataset. This is an example and needs to be adapted based on the dataset's features and domain knowledge.
+causal_graph = """digraph {
+    CreditScore;
+    Gender;
+    Age;
+    Tenure;
+    Balance;
+    NumOfProducts;
+    HasCrCard;
+    IsActiveMember;
+    EstimatedSalary;
+    Exited[label="Churn"];
+    Geography_Germany[label="Geography: Germany"];
+    Geography_Spain[label="Geography: Spain"];
+    U[label="Unobserved Confounders",observed="no"];
+    U->{CreditScore, Balance, EstimatedSalary};
+    Gender -> Age;
+    Age -> Exited;
+    Balance -> Exited;
+    NumOfProducts -> Exited;
+    HasCrCard -> Exited;
+    IsActiveMember -> Exited;
+    Geography_Germany -> Exited;
+    Geography_Spain -> Exited;
+}"""
+
+# Initialize the dowhy model with the new dataset and adjusted causal graph
+model= dowhy.CausalModel(
+        data = dataset,
+        graph=causal_graph.replace("\n", " "),
+        treatment="IsActiveMember",  # Adjust this based on the causal question
+        outcome='Exited')
+model.view_model()
+
+from IPython.display import Image, display
+display(Image(filename="causal_model.png"))

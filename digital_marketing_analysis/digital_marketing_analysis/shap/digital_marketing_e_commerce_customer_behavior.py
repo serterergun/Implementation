@@ -50,7 +50,7 @@ def mean_shap_plot(model, X):
 
 def main():
     # Load real dataset
-    df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\digital_marketing_analysis\data\Dataset.csv")
+    df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\digital_marketing_analysis\data\digital_marketing_analysis.csv")
 
     # Drop any irrelevant or non-feature columns
     # df.drop(['CreditCard','PushStatus'], axis=1, inplace=True)
