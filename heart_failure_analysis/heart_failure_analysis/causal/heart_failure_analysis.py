@@ -27,7 +27,7 @@ import graphviz
 from IPython.display import Image, display
 
 # Load the new dataset
-dataset = pd.read_csv('https://raw.githubusercontent.com/serterergun/Implementation/main/digital_marketing_analysis/data/digital_marketing_analysis.csv?token=GHSAT0AAAAAACRMURIW2KLPR3ABUXU3ARYMZSFIP7Q')
+dataset = pd.read_csv('https://raw.githubusercontent.com/serterergun/Implementation/main/heart_failure_analysis/data/heart_failure_analysis.csv?token=GHSAT0AAAAAACRMURIXN52RIZGALH2B6TPMZSFI3XA')
 
 # Display the first few rows of the dataset to understand its structure
 print(dataset.head())
@@ -48,47 +48,24 @@ for column in dataset.columns:
 dataset_copy = dataset.copy(deep=True)
 
 # Define the outcome variable
-outcome_variable = 'churn'
+outcome_variable = 'DEATH_EVENT'
 
 # Identify a potential treatment variable - adjust based on domain knowledge
-treatment_variable = 'MarketingSpend'  # Example, replace with actual treatment feature if different
+# For now, we will use 'serum_sodium' as an example; please adjust based on your specific analysis
+treatment_variable = 'serum_sodium'  # Example, replace with actual treatment feature if different
+
+# Define all features in the dataset excluding the outcome variable
+features = [feature for feature in dataset.columns if feature != outcome_variable]
+nodes = [f'{feature}[label="{feature}"]' for feature in features]
+edges = [f'{feature} -> {outcome_variable}' for feature in features]
 
 # Define the causal graph in a detailed manner
-causal_graph = """digraph {
-    AccountLength[label="Account Length"];
-    Location[label="Location"];
-    AddtoWishlist[label="Add to Wishlist"];
-    DesktopSessions[label="Desktop Sessions"];
-    AppSessions[label="App Sessions"];
-    DesktopTransactions[label="Desktop Transactions"];
-    TotalProductDetailViews[label="Total Product Detail Views"];
-    SessionDuration[label="Session Duration"];
-    PromotionClicks[label="Promotion Clicks"];
-    AverageOrderValue[label="Average Order Value"];
-    SaleProductViews[label="Sale Product Views"];
-    DiscountRatePerVisitedProducts[label="Discount Rate per Visited Products"];
-    ProductDetailViewPerAppSession[label="Product Detail View per App Session"];
-    AppTransactions[label="App Transactions"];
-    AddToCartPerSession[label="Add to Cart per Session"];
-    CustomerServiceCalls[label="Customer Service Calls"];
-    churn[label="Churn"];
-    AccountLength -> churn;
-    Location -> churn;
-    AddtoWishlist -> churn;
-    DesktopSessions -> churn;
-    AppSessions -> churn;
-    DesktopTransactions -> churn;
-    TotalProductDetailViews -> churn;
-    SessionDuration -> churn;
-    PromotionClicks -> churn;
-    AverageOrderValue -> churn;
-    SaleProductViews -> churn;
-    DiscountRatePerVisitedProducts -> churn;
-    ProductDetailViewPerAppSession -> churn;
-    AppTransactions -> churn;
-    AddToCartPerSession -> churn;
-    CustomerServiceCalls -> churn;
-}"""
+causal_graph = f"""digraph {{
+    {"; ".join(nodes)};
+    {"; ".join(edges)};
+    {outcome_variable}[label="{outcome_variable}"];
+}}"""
+print(causal_graph)
 
 # Initialize the dowhy model with the new dataset and adjusted causal graph
 model = dowhy.CausalModel(
