@@ -53,10 +53,10 @@ def main():
     df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\Implementation\bank_customer_churn_analysis\data\bank_customer_churn_analysis.csv")
 
     # Drop any irrelevant or non-feature columns
-    df.drop(['RowNumber','CustomerId','Surname'], axis=1, inplace=True)
+    #df.drop(['RowNumber','CustomerId','Surname'], axis=1, inplace=True)
 
     # Encode categorical features
-    df = pd.get_dummies(df, columns=['Gender', 'Geography'], drop_first=True)
+    df = pd.get_dummies(df, columns=['Gender', 'Geography','Surname'], drop_first=True)
 
     X = df.drop('Exited', axis=1)
     y = df['Exited']
