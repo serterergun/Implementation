@@ -1,119 +1,57 @@
-import sys
-import subprocess
-
-# Install required system dependencies for pygraphviz
-try:
-    if sys.platform.startswith('linux'):
-        subprocess.check_call(['sudo', 'apt-get', 'install', '-y', 'graphviz', 'graphviz-dev'])
-    elif sys.platform == 'darwin':  # macOS
-        subprocess.check_call(['brew', 'install', 'graphviz'])
-    elif sys.platform.startswith('win'):  # Windows
-        print("Please install Graphviz from https://graphviz.org/download/ and add it to your PATH.")
-except Exception as e:
-    print(e)
-
-# Install pygraphviz
-try:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pygraphviz'])
-except Exception as e:
-    print(e)
-
-# Import necessary libraries
 import pandas as pd
 import numpy as np
+from causallearn.search.ConstraintBased.PC import pc
+from causallearn.utils.GraphUtils import GraphUtils
 import matplotlib.pyplot as plt
-import dowhy
-import graphviz
-from IPython.display import Image, display
+import io
+import matplotlib.image as mpimg
 
 # Load the dataset
-dataset = pd.read_csv('https://raw.githubusercontent.com/serterergun/Implementation/main/telco_churn_analysis/data/telco_churn_analysis.csv?token=GHSAT0AAAAAACRMURIWLGAIVKVZSRA5UZEGZSFJD3Q')
+df = pd.read_csv(r"https://raw.githubusercontent.com/serterergun/Implementation/main/telco_churn_analysis/data/telco_churn_analysis.csv?token=GHSAT0AAAAAACRMURIWZGFWQPL44O52G4QYZSL64YA")
 
-# Drop the "customerID" column
-dataset = dataset.drop(['customerID'], axis=1)
+# Drop specified columns
+df.drop(['customerID'], axis=1, inplace=True)
 
-# Encode categorical features
-categorical_features = [
-    'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines', 
-    'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 
-    'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract', 
-    'PaperlessBilling', 'PaymentMethod'
-]
+# Encode categorical columns
+df = pd.get_dummies(df, columns=['Contract','OnlineSecurity','StreamingTV','PaperlessBilling','OnlineBackup','TechSupport','StreamingMovies','gender','Partner','Dependents','PhoneService','MultipleLines','DeviceProtection','InternetService','PaymentMethod'], drop_first=True)
 
-# Convert categorical variables into dummy/indicator variables
-dataset = pd.get_dummies(dataset, columns=categorical_features, drop_first=True)
+# Ensure all columns are numeric and fill any missing values
+for column in df.columns:
+    df[column] = pd.to_numeric(df[column], errors='coerce')
+if df.isnull().sum().sum() > 0:
+    df.fillna(df.mean(), inplace=True)
 
-# Check for missing values and handle if necessary
-dataset.isnull().sum()
+# Remove columns with zero variance
+df = df.loc[:, df.var() != 0]
 
-# Creating a copy of the dataset
-dataset_copy = dataset.copy(deep=True)
+# Check for multicollinearity by calculating the correlation matrix
+corr_matrix = df.corr().abs()
 
-# Define the causal graph
-causal_graph = """digraph {
-    SeniorCitizen[label="Senior Citizen"];
-    tenure[label="Tenure"];
-    MonthlyCharges[label="Monthly Charges"];
-    TotalCharges[label="Total Charges"];
-    Churn[label="Churn"];
-    gender_Male[label="Gender: Male"];
-    Partner_Yes[label="Partner"];
-    Dependents_Yes[label="Dependents"];
-    PhoneService_Yes[label="Phone Service"];
-    MultipleLines_Yes[label="Multiple Lines"];
-    InternetService_Fiber_optic[label="Internet Service: Fiber Optic"];
-    InternetService_No[label="Internet Service: No"];
-    OnlineSecurity_Yes[label="Online Security"];
-    OnlineBackup_Yes[label="Online Backup"];
-    DeviceProtection_Yes[label="Device Protection"];
-    TechSupport_Yes[label="Tech Support"];
-    StreamingTV_Yes[label="Streaming TV"];
-    StreamingMovies_Yes[label="Streaming Movies"];
-    Contract_One_year[label="Contract: One Year"];
-    Contract_Two_year[label="Contract: Two Year"];
-    PaperlessBilling_Yes[label="Paperless Billing"];
-    PaymentMethod_Credit_card_automatic[label="Payment Method: Credit Card (Automatic)"];
-    PaymentMethod_Electronic_check[label="Payment Method: Electronic Check"];
-    PaymentMethod_Mailed_check[label="Payment Method: Mailed Check"];
+# Select upper triangle of the correlation matrix
+upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
-    gender_Male -> Churn;
-    Partner_Yes -> Churn;
-    Dependents_Yes -> Churn;
-    PhoneService_Yes -> Churn;
-    MultipleLines_Yes -> Churn;
-    InternetService_Fiber_optic -> Churn;
-    InternetService_No -> Churn;
-    OnlineSecurity_Yes -> Churn;
-    OnlineBackup_Yes -> Churn;
-    DeviceProtection_Yes -> Churn;
-    TechSupport_Yes -> Churn;
-    StreamingTV_Yes -> Churn;
-    StreamingMovies_Yes -> Churn;
-    Contract_One_year -> Churn;
-    Contract_Two_year -> Churn;
-    PaperlessBilling_Yes -> Churn;
-    PaymentMethod_Credit_card_automatic -> Churn;
-    PaymentMethod_Electronic_check -> Churn;
-    PaymentMethod_Mailed_check -> Churn;
-    SeniorCitizen -> Churn;
-    tenure -> Churn;
-    MonthlyCharges -> Churn;
-    TotalCharges -> Churn;
-}"""
+# Find features with correlation greater than 0.95
+to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
 
-# Initialize the dowhy model with the new dataset and adjusted causal graph
-model = dowhy.CausalModel(
-    data=dataset,
-    graph=causal_graph.replace("\n", " "),
-    treatment="Contract_Two_year",  # Adjust this based on the causal question
-    outcome='Churn'
-)
+# Drop features with high correlation
+df.drop(columns=to_drop, inplace=True)
 
-# Generate the causal graph image
-model.view_model()
+# Convert all columns to float64 to ensure compatibility with np.isnan
+df = df.astype(np.float64)
 
-# Display the causal graph
-display(Image(filename="causal_model.png"))
+# Get labels and convert data to numpy array
+labels = df.columns.tolist()
+data = df.to_numpy()
 
-# Save the causal graph as a PDF
-graphviz.Source(causal_graph).render("causal_model", format='pdf')
+# Apply PC algorithm
+cg = pc(data)
+
+# Visualization using pydot
+pyd = GraphUtils.to_pydot(cg.G, labels=labels)
+tmp_png = pyd.create_png(f="png")
+fp = io.BytesIO(tmp_png)
+img = mpimg.imread(fp, format='png')
+plt.figure(figsize=(50, 50))  # Adjust the figure size as needed
+plt.axis('off')
+plt.imshow(img)
+plt.show()

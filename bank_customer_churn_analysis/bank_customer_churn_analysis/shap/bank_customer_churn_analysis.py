@@ -50,13 +50,13 @@ def mean_shap_plot(model, X):
 
 def main():
     # Load real dataset
-    df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\Implementation\bank_customer_churn_analysis\data\bank_customer_churn_analysis.csv")
-
+    file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/bank_customer_churn_analysis/data/bank_customer_churn_analysis.csv'
+    df = pd.read_csv(file_path)
     # Drop any irrelevant or non-feature columns
-    #df.drop(['RowNumber','CustomerId','Surname'], axis=1, inplace=True)
+    df.drop(['RowNumber','CustomerId','Surname', 'Geography'], axis=1, inplace=True)
 
     # Encode categorical features
-    df = pd.get_dummies(df, columns=['Gender', 'Geography','Surname'], drop_first=True)
+    df = pd.get_dummies(df, columns=['Gender'], drop_first=True)
 
     X = df.drop('Exited', axis=1)
     y = df['Exited']

@@ -53,10 +53,10 @@ def main():
     df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\Implementation\booking_reservation_cancelation\data\booking_reservation_cancelation.csv")
 
     # Drop any irrelevant or non-feature columns
-    df.drop(['hotel','reservation_status_date','reservation_status','agent'], axis=1, inplace=True)
+    df.drop(['hotel','reservation_status_date','reservation_status','agent','adults','country','market_segment','reserved_room_type','meal','is_repeated_guest','assigned_room_type','arrival_date_month','distribution_channel','children','babies','company'], axis=1, inplace=True)
 
     # Encode categorical features
-    df = pd.get_dummies(df, columns=['is_repeated_guest','assigned_room_type','reserved_room_type','arrival_date_month','market_segment','distribution_channel','meal','country','deposit_type','customer_type'], drop_first=True)
+    df = pd.get_dummies(df, columns=['deposit_type','customer_type'], drop_first=True)
 
     X = df.drop('is_canceled', axis=1)
     y = df['is_canceled']
