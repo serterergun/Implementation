@@ -8,7 +8,7 @@ from causallearn.utils.cit import chisq, fisherz, kci, d_separation
 from causallearn.utils.GraphUtils import GraphUtils
 
 # Load the dataset
-file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/bank_customer_churn_analysis/data/bank_customer_churn_analysis.csv'
+file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/bank_customer_churn_analysis/data/bank_customer_churn_dataset.csv'
 data = pd.read_csv(file_path)
 
 # Preprocess the data

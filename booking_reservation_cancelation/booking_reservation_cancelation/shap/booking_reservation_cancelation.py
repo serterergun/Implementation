@@ -50,7 +50,7 @@ def mean_shap_plot(model, X):
 
 def main():
     # Load real dataset
-    df = load_data(r"C:\Users\ergun\Desktop\SHAP_VS_CAUSAL\Implementation\booking_reservation_cancelation\data\booking_reservation_cancelation.csv")
+    df = load_data(r"https://raw.githubusercontent.com/serterergun/Implementation/main/booking_reservation_cancelation/data/booking_reservation_cancelation_dataset.csv")
 
     # Drop any irrelevant or non-feature columns
     df.drop(['hotel','reservation_status_date','reservation_status','agent','adults','country','market_segment','reserved_room_type','meal','is_repeated_guest','assigned_room_type','arrival_date_month','distribution_channel','children','babies','company'], axis=1, inplace=True)

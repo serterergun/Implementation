@@ -7,7 +7,7 @@ import io
 import matplotlib.image as mpimg
 
 # Load the dataset
-file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/booking_reservation_cancelation/data/booking_reservation_cancelation.csv'
+file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/booking_reservation_cancelation/data/booking_reservation_cancelation_dataset.csv'
 df = pd.read_csv(file_path)
 # Drop specified columns
 

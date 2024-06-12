@@ -10,7 +10,7 @@ from causallearn.utils.GraphUtils import GraphUtils
 from sklearn.model_selection import train_test_split
 
 # Load the dataset
-file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/booking_reservation_cancelation/data/booking_reservation_cancelation.csv'
+file_path = 'https://raw.githubusercontent.com/serterergun/Implementation/main/booking_reservation_cancelation/data/booking_reservation_cancelation_dataset.csv'
 data = pd.read_csv(file_path)
 
 # Preprocess the data
@@ -54,7 +54,7 @@ importance_df.columns = ['Feature', 'Mean SHAP Value']
 importance_df.sort_values(by='Mean SHAP Value', ascending=True, inplace=True)
 
 # Set a threshold and filter out low importance features
-threshold = 0.01  # Set your threshold value here
+threshold = 0.1  # Set your threshold value here
 low_importance_features = importance_df[importance_df['Mean SHAP Value'] < threshold]['Feature'].tolist()
 # print(f"Features to drop: {low_importance_features}")
 
