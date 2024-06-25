@@ -12,10 +12,10 @@ df = pd.read_csv(file_path)
 
 # Drop specified columns
 # All Features ('RowNumber','CustomerId','Surname','CreditScore','Geography','Gender','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary')
-df.drop(['RowNumber','CustomerId','Surname','Geography'], axis=1, inplace=True)
+df.drop(['RowNumber','CustomerId','Surname'], axis=1, inplace=True)
 
 # Encode categorical columns
-df = pd.get_dummies(df, columns=['Gender'], drop_first=True)
+df = pd.get_dummies(df, columns=['Gender','Geography'], drop_first=True)
 
 # Ensure all columns are numeric and fill any missing values
 for column in df.columns:
